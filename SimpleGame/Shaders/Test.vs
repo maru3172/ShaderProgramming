@@ -10,7 +10,7 @@ uniform vec4 u_Trans;
 void main()
 {
 	vec4 newPosition = vec4(a_Position, 1);
-	newPosition.xy = newPosition.xy - vec2(0.5, 0.5);
+	newPosition.xy = newPosition.xy;
 	gl_Position = newPosition;
 
 	v_Color = a_Color;
