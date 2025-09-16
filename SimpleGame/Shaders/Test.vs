@@ -13,7 +13,7 @@ void main()
 {
 	float value = 2 * fract(u_Time) - 1; // -1 ~ 1
 	float rad = (value + 1) * c_PI; // 0 ~ 2PI
-	float x = value;
+	float x = cos(rad);
 	float y = sin(rad);
 	vec4 newPosition = vec4(a_Position, 1);
 	newPosition.xy += vec2(x, y);
