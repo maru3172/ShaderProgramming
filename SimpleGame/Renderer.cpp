@@ -224,7 +224,7 @@ void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, flo
 
 void Renderer::DrawTest()
 {
-	m_Time += 0.016;
+	m_Time += 0.0016;
 
 	//Program select
 	glUseProgram(m_TestShader);
