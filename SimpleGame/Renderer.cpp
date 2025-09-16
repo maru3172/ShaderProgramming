@@ -49,7 +49,7 @@ void Renderer::CreateVertexBufferObjects()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW);
 
 	float center = 0.5f;
-	float size = 1.f;
+	float size = 0.1f;
 	float testPos[]
 		=
 	{
@@ -224,11 +224,16 @@ void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, flo
 
 void Renderer::DrawTest()
 {
+	m_Time += 0.016;
+
 	//Program select
 	glUseProgram(m_TestShader);
 
 	glUniform4f(glGetUniformLocation(m_TestShader, "u_Trans"), 0, 0, 0, 1);
 	glUniform4f(glGetUniformLocation(m_TestShader, "u_Color"), 1, 1, 1, 1);
+
+	int uTimeLoc = glGetUniformLocation(m_TestShader, "u_Time");
+	glUniform1f(uTimeLoc, m_Time);
 
 	int aPosLoc = glGetAttribLocation(m_TestShader, "a_Position");
 	glEnableVertexAttribArray(aPosLoc);
