@@ -1,6 +1,7 @@
 #version 330
 
 in vec3 a_Position;
+in float a_Value;
 in vec4 a_Color;
 
 out vec4 v_Color;
