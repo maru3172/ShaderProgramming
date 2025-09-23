@@ -344,7 +344,7 @@ void Renderer::CreateParticles(int particleCounts)
 
 	for (int i = 0; i < particleCounts; ++i)
 	{
-		float size = 0.05f * ((float)rand()/(float)RAND_MAX);
+		float size = 0.01f * ((float)rand()/(float)RAND_MAX);
 		float centerX = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
 		float centerY = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
 		float value = ((float)rand() / (float)RAND_MAX);
