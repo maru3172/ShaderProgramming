@@ -328,7 +328,9 @@ void Renderer::DrawParticle()
 	glEnableVertexAttribArray(aVelLoc);
 	glVertexAttribPointer(aVelLoc, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (GLvoid*)(sizeof(float) * 9));
 
-	glDrawArrays(GL_TRIANGLES, 0, m_VBOParticlesVertexCount);
+	int vertexParticle = 0;
+
+	glDrawArrays(GL_TRIANGLES, 0, m_VBOParticlesVertexCount - 6 * vertexParticle);
 
 	glDisableVertexAttribArray(aPosLoc);
 	glDisableVertexAttribArray(aColorLoc);
@@ -355,8 +357,8 @@ void Renderer::CreateParticles(int particleCounts)
 	for (int i = 0; i < particleCounts; ++i)
 	{
 		float size = 0.01f * ((float)rand()/(float)RAND_MAX);
-		float centerX = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
-		float centerY = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+		float centerX = 0.f;// ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+		float centerY = 0.f;// ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
 		float value = ((float)rand() / (float)RAND_MAX);
 		float r = ((float)rand() / (float)RAND_MAX);
 		float g = ((float)rand() / (float)RAND_MAX);
