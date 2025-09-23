@@ -13,6 +13,7 @@ const float c_PI = 3.141592;
 void main()
 {
 	vec4 newPosition = vec4(a_Position, 1);
+	// newPosition.xy *= fract(u_Time);
 	gl_Position = newPosition;
 
 	v_Color = a_Color;
