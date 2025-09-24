@@ -24,7 +24,7 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	CreateVertexBufferObjects();
 
 	//Create Particles
-	CreateParticles(10000);
+	CreateParticles(1000);
 
 	if (m_SolidRectShader > 0 && m_VBORect > 0)
 	{
@@ -293,6 +293,8 @@ void Renderer::DrawTest()
 
 void Renderer::DrawParticle()
 {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	m_Time += 0.0016;
 
 	//Program select
@@ -336,6 +338,8 @@ void Renderer::DrawParticle()
 	glDisableVertexAttribArray(aColorLoc);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glDisable(GL_BLEND);
 }
 
 void Renderer::GetGLPosition(float x, float y, float *newX, float *newY)
@@ -357,16 +361,16 @@ void Renderer::CreateParticles(int particleCounts)
 	for (int i = 0; i < particleCounts; ++i)
 	{
 		float size = 0.01f * ((float)rand()/(float)RAND_MAX);
-		float centerX = 0.f;// ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
-		float centerY = 0.f;// ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+		float centerX = 0.f; // ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+		float centerY = 0.f; // ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
 		float value = ((float)rand() / (float)RAND_MAX);
 		float r = ((float)rand() / (float)RAND_MAX);
 		float g = ((float)rand() / (float)RAND_MAX);
 		float b = ((float)rand() / (float)RAND_MAX);
 		float a = ((float)rand() / (float)RAND_MAX);
 		float sTime = ((float)rand() / (float)RAND_MAX) * 2.f;
-		float vx = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
-		float vy = ((float)rand() / (float)RAND_MAX) * 2.f - 1.f;
+		float vx = (((float)rand() / (float)RAND_MAX) * 2.f - 1.f) * 3;
+		float vy = ((float)rand() / (float)RAND_MAX) * 5.f;
 		float vz = 0.f;
 
 		int index = i * floatCountPerParticle;

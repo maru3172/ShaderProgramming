@@ -15,20 +15,23 @@ const vec2 c_G = vec2(0, -9.8);
 
 void main()
 {
+	float lifeTime = 0.3;
+	float newAlpha = 1;
 	float newTime = u_Time - a_STime;
 	vec4 newPosition = vec4(a_Position, 1);
 	if(newTime > 0)
 	{
-		float t = fract(newTime / 2.0) * 2.0;
+		float t = fract(newTime / lifeTime) * lifeTime;
 		float tt = t * t;
-		float x = 0, y = 0.5 * c_G.y * tt;
+		float x = a_Vel.x * t + 0.5 * c_G.x * tt;
+		float y = a_Vel.y * t + 0.5 * c_G.y * tt;
 		newPosition.xy += vec2(x, y);
+		newAlpha = 1 - t / lifeTime;
 	}
 	else
 	{
 		newPosition.xy -= vec2(-100000, 0);
 	}
 	gl_Position = newPosition;
-
-	v_Color = a_Color;
+	v_Color = vec4(a_Color.rgb, newAlpha);
 }
