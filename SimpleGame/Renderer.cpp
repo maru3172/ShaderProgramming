@@ -387,6 +387,7 @@ void Renderer::CreateParticles(int particleCounts)
 		float vz = 0.f;
 		float lifeTime = ((float)rand() / (float)RAND_MAX) * 1.f;
 		float mass = ((float)rand() / (float)RAND_MAX) * 1.f + 1.f;
+		float time = ((float)rand() / (float)RAND_MAX);
 
 		int index = i * floatCountPerParticle;
 

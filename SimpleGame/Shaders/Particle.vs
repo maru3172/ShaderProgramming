@@ -16,7 +16,7 @@ uniform vec3 u_Force;
 const float c_PI = 3.141592;
 const vec2 c_G = vec2(0, -9.8);
 
-void main()
+void fountain()
 {
 	float lifeTime = a_LifeTime;
 	float newAlpha = 1;
@@ -41,4 +41,33 @@ void main()
 	}
 	gl_Position = newPosition;
 	v_Color = vec4(a_Color.rgb, newAlpha);
+}
+
+void sinParticle()
+{
+	vec4 newPosition = vec4(a_Position, 1);
+	float newAlpha = 1;
+
+	float newTime = u_Time - a_STime;
+
+	if(newTime > 0){
+		float t = fract(newTime / a_LifeTime) * a_LifeTime ;
+		float tt = t * t;
+		float x = (t / a_LifeTime) * 2.f - 1.f; // -1 ~ 1
+		float y = sin(2 * c_PI * (t / a_LifeTime));
+	
+		newPosition.xy += vec2(x, y);
+	}
+	else{
+		newPosition.xy += vec2(-100000, 0);
+	}
+
+	gl_Position = newPosition;
+	v_Color = vec4(a_Color.rgb, newAlpha);
+}
+
+void main()
+{
+	// fountain();
+	sinParticle();
 }
