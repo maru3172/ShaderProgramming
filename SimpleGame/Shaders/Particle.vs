@@ -55,8 +55,9 @@ void sinParticle()
 	if(newTime > 0){
 		float t = fract(newTime / a_LifeTime) * a_LifeTime ;
 		float tt = t * t;
-		float x = (t / a_LifeTime) * 2.f - 1.f; // -1 ~ 1
-		float y = amp * sin(period * (2.f * c_PI * (t / a_LifeTime)));
+		float nTime = t / a_LifeTime;
+		float x = nTime * 2.f - 1.f; // -1 ~ 1
+		float y = nTime * amp * sin(period * (2.f * c_PI * (t / a_LifeTime)));
 
 		newPosition.xy += vec2(x, y);
 		newAlpha = 1 - t / a_LifeTime;
