@@ -7,6 +7,7 @@ in float a_STime;
 in vec3 a_Vel;
 in float a_LifeTime;
 in float a_Mass;
+in float a_Period;
 
 out vec4 v_Color;
 
@@ -48,7 +49,7 @@ void sinParticle()
 	vec4 newPosition = vec4(a_Position, 1);
 	float newAlpha = 1;
 	float amp = a_Value * 2 - 1.f;
-	float period = 2.f;
+	float period = a_Period * 2;
 
 	float newTime = u_Time - a_STime;
 
