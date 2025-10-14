@@ -14,11 +14,16 @@ void main()
 
 	float value = (a_Position.x + 0.5) * 2 * c_PI; // 0 ~ 2PI
 	float value1 = a_Position.x + 0.5;
-	float dx = 0;
-	float dy = value1 * 0.1 * sin(value + u_Time);
 
+	float dx = 0;
+	float dy = value1 * 0.1 * sin(value - u_Time);
+
+	newPosition.y *= (1 - value1 + 0.2);
 	newPosition.xy += vec2(dx, dy);
+
+	float shading = (sin(value - u_Time) + 1) / 2 + 0.2;
+
 	gl_Position = newPosition;
 
-	v_Color = vec4(1);
+	v_Color = vec4(shading);
 }
