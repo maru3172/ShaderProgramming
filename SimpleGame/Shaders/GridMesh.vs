@@ -35,14 +35,10 @@ void Wave()
 
 	float d = distance(a_Position.xy, vec2(0, 0));
 
-	if(d < 0.5)
-	{
-		v_Color = vec4(1);
-	}
-	else
-	{
-		v_Color = vec4(0);
-	}
+	float value = clamp((0.5 - d), 0, 1);
+	value = ceil(value);
+
+	v_Color = vec4(value);
 }
 
 void main()
