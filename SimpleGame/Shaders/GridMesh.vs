@@ -39,7 +39,8 @@ void Wave()
 	// value = ceil(value);
 
 	float value = sin(d * 4 * c_PI * 10 - u_Time * 5);
-	v_Color = vec4(value);
+	float p = 1 - clamp(d * 2, 0, 1);
+	v_Color = vec4(value * p);
 }
 
 void main()
