@@ -31,13 +31,14 @@ void Flag()
 void Wave()
 {
 	vec4 newPosition = vec4(a_Position, 1);
+	
+	float d = distance(a_Position.xy, vec2(0, 0));
 	gl_Position = newPosition;
 
-	float d = distance(a_Position.xy, vec2(0, 0));
+	// float value = clamp((0.5 - d), 0, 1);
+	// value = ceil(value);
 
-	float value = clamp((0.5 - d), 0, 1);
-	value = ceil(value);
-
+	float value = sin(d * 4 * c_PI * 10 - u_Time * 5);
 	v_Color = vec4(value);
 }
 
