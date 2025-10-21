@@ -7,6 +7,8 @@
 
 #include "Dependencies\glew.h"
 
+#define MAX_POINTS 500
+
 class Renderer
 {
 public:
@@ -60,5 +62,8 @@ private:
 	//full screen
 	GLuint m_FullScreenVBO = 0;
 	GLuint m_FullScreenShader = 0;
+
+	//rain drop
+	float m_Points[MAX_POINTS * 4];
 };
 
