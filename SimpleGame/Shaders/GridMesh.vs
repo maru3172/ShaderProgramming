@@ -77,9 +77,55 @@ void RainDrop()
 	v_Color = vec4(newColor);
 }
 
+// 중간고사
+void Q1()
+{
+	vec4 newPosition = vec4(a_Position, 1);
+
+	float valueX = 2 * (newPosition.x + 0.5) * c_PI;
+	float valueY = 2 * (newPosition.y + 0.5) * c_PI;
+
+	float grayScale = ceil(sin(valueX * 8 + u_Time) * sin(valueY * 8 + u_Time));
+
+	gl_Position = newPosition;
+	v_Color = vec4(grayScale);
+}
+
+void Q2()
+{
+	vec4 newPosition = vec4(a_Position, 1);
+
+	float valueX = 2 * (newPosition.x + 0.5) * c_PI;
+	float valueY = 2 * (newPosition.y + 0.5) * c_PI;
+
+	float grayScale = max(sin(valueX * 8 + u_Time), sin(valueY * 8 + u_Time));
+
+	gl_Position = newPosition;
+	v_Color = vec4(grayScale);
+}
+
+
+void Q3()
+{
+	vec4 newPosition = vec4(a_Position, 1);
+
+	float valueX = 2 * (newPosition.x + 0.5) * c_PI;
+	float valueY = 2 * (newPosition.y + 0.5) * c_PI;
+
+	float grayScale = sin(valueX * 8 + u_Time);
+	grayScale += sin(valueY * 8 + u_Time);
+
+	gl_Position = newPosition;
+	v_Color = vec4(grayScale);
+}
+
+
 void main()
 {
 	// Flag();
 	// Wave();
-	RainDrop();
+	// RainDrop();
+	Q1();
+	// Q2();
+	// Q3();
 }

@@ -505,7 +505,7 @@ void Renderer::DrawGridMesh()
 	glUniform4fv(uPointsLoc, MAX_POINTS, m_Points);
 
 	int uDCLoc = glGetUniformLocation(shader, "u_DropCount");
-	glUniform1i(uDCLoc, 100);
+	glUniform1i(uDCLoc, 500);
 	
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);
