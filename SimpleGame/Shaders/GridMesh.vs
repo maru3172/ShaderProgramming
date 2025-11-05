@@ -4,6 +4,7 @@
 in vec3 a_Position;
 
 out vec4 v_Color;
+out vec2 v_UV;
 
 uniform float u_Time;
 uniform int u_DropCount;
@@ -89,6 +90,7 @@ void Q1()
 
 	gl_Position = newPosition;
 	v_Color = vec4(grayScale);
+	v_UV = vec2(newPosition.x + 0.5, newPosition.y + 0.5);
 }
 
 void Q2()
