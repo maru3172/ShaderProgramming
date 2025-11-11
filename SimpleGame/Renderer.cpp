@@ -65,6 +65,7 @@ void Renderer::CompileAllShaderPrograms()
 	m_ParticleShader = CompileShaders("./Shaders/Particle.vs", "./Shaders/Particle.fs");
 	m_GridMeshShader = CompileShaders("./Shaders/GridMesh.vs", "./Shaders/GridMesh.fs");
 	m_FullScreenShader = CompileShaders("./Shaders/FullScreenColor.vs", "./Shaders/FullScreenColor.fs");
+	m_FSShader = CompileShaders("./Shaders/FS.vs", "./Shaders/FS.fs");
 }
 
 bool Renderer::IsInitialized()
@@ -144,15 +145,25 @@ void Renderer::CreateVertexBufferObjects()
 	glGenBuffers(1, &m_FullScreenVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_FullScreenVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(fullRect), fullRect, GL_STATIC_DRAW);
+
+	float fullRectFS[] =
+	{
+		-1, -1, 0, 1, -1, 0, 1, 1, 0,
+		-1 ,-1, 0, -1, 1, 0, 1, 1, 0
+	};
+
+	glGenBuffers(1, &m_FSVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_FSVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(fullRectFS), fullRectFS, GL_STATIC_DRAW);
 }
 
 void Renderer::CreateGridMesh(int x, int y)
 {
-	float basePosX = -1.f;
-	float basePosY = -1.f;
+	float basePosX = -0.5f;
+	float basePosY = -0.5f;
 
-	float targetPosX = 1.f;
-	float targetPosY = 1.f;
+	float targetPosX = 0.5f;
+	float targetPosY = 0.5f;
 
 	int pointCountX = x;
 	int pointCountY = y;
@@ -243,6 +254,23 @@ void Renderer::DrawFullScreenColor(float r, float g, float b, float a)
 	glEnableVertexAttribArray(attribPosition);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_FullScreenVBO);
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glDisableVertexAttribArray(attribPosition);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::DrawFS()
+{
+	int shader = m_FSShader;
+	glUseProgram(shader);
+
+	int attribPosition = glGetAttribLocation(shader, "a_Position");
+	glEnableVertexAttribArray(attribPosition);
+	glBindBuffer(GL_ARRAY_BUFFER, m_FSVBO);
 	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);

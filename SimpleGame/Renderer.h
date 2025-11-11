@@ -22,6 +22,7 @@ public:
 	void DrawParticle();
 	void DrawGridMesh();
 	void DrawFullScreenColor(float r, float g, float b, float a);
+	void DrawFS();
 
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
@@ -65,5 +66,9 @@ private:
 
 	//rain drop
 	float m_Points[MAX_POINTS * 4];
+
+	//fragment shader factory
+	GLuint m_FSVBO = 0;
+	GLuint m_FSShader = 0;
 };
 
