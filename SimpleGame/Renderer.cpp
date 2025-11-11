@@ -159,11 +159,11 @@ void Renderer::CreateVertexBufferObjects()
 
 void Renderer::CreateGridMesh(int x, int y)
 {
-	float basePosX = -0.5f;
-	float basePosY = -0.5f;
+	float basePosX = -1.0f;
+	float basePosY = -1.0f;
 
-	float targetPosX = 0.5f;
-	float targetPosY = 0.5f;
+	float targetPosX = 1.0f;
+	float targetPosY = 1.0f;
 
 	int pointCountX = x;
 	int pointCountY = y;
@@ -265,8 +265,13 @@ void Renderer::DrawFullScreenColor(float r, float g, float b, float a)
 
 void Renderer::DrawFS()
 {
+	m_Time += 0.0016;
+
 	int shader = m_FSShader;
 	glUseProgram(shader);
+
+	int uTimeLoc = glGetUniformLocation(m_TestShader, "u_Time");
+	glUniform1f(uTimeLoc, m_Time);
 
 	int attribPosition = glGetAttribLocation(shader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);

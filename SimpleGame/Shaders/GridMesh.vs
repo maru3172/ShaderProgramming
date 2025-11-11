@@ -126,8 +126,8 @@ void main()
 {
 	// Flag();
 	// Wave();
-	// RainDrop();
-	Q1();
+	RainDrop();
+	// Q1();
 	// Q2();
 	// Q3();
 }
