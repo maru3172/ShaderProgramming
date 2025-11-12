@@ -31,6 +31,7 @@ void Flag()
 	gl_Position = newPosition;
 
 	v_Color = vec4(shading);
+	v_UV = vec2(a_Position.x + 0.5, 0.5 - a_Position.y);
 }
 
 void Wave()
@@ -124,9 +125,9 @@ void Q3()
 
 void main()
 {
-	// Flag();
+	Flag();
 	// Wave();
-	RainDrop();
+	// RainDrop();
 	// Q1();
 	// Q2();
 	// Q3();

@@ -166,11 +166,11 @@ void Renderer::CreateVertexBufferObjects()
 
 void Renderer::CreateGridMesh(int x, int y)
 {
-	float basePosX = -1.0f;
-	float basePosY = -1.0f;
+	float basePosX = -0.5f;
+	float basePosY = -0.5f;
 
-	float targetPosX = 1.0f;
-	float targetPosY = 1.0f;
+	float targetPosX = 0.5f;
+	float targetPosY = 0.5f;
 
 	int pointCountX = x;
 	int pointCountY = y;
@@ -575,6 +575,9 @@ void Renderer::DrawGridMesh()
 
 	int uTimeLoc = glGetUniformLocation(shader, "u_Time");
 	glUniform1f(uTimeLoc, m_Time);
+	int u_SamplerRGB = glGetUniformLocation(shader, "u_RGBTexture");
+	glUniform1i(u_SamplerRGB, 0);
+	glBindTexture(GL_TEXTURE_2D, m_RGBTexture);
 
 	int uPointsLoc = glGetUniformLocation(shader, "u_Points");
 	glUniform4fv(uPointsLoc, MAX_POINTS, m_Points);
