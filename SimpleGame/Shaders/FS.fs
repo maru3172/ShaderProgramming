@@ -3,6 +3,7 @@
 layout(location=0) out vec4 FragColor;
 
 uniform sampler2D u_RGBTexture;
+uniform sampler2D u_NumTexture;
 
 in vec2 v_UV;
 uniform float u_Time;
@@ -85,6 +86,36 @@ void Q2()
     FragColor = texture(u_RGBTexture, vec2(newX, newY));
 }
 
+void Q3()
+{
+    float newX = fract(v_UV.x * 3);
+    float newY = floor(v_UV.x * 3) / 3 + v_UV.y / 3;
+    FragColor = texture(u_RGBTexture, vec2(newX, newY));
+}
+
+void Q4()
+{
+    float count = 5; // uniform
+    float shift = 0.1 * u_Time;
+    float newX = fract(fract(v_UV.x * count) + (floor(v_UV.y * count) + 1) * shift);
+    float newY = fract(v_UV.y * count);
+    FragColor = texture(u_RGBTexture, vec2(newX, newY));
+}
+
+void Q5()
+{
+    float count = 2; // uniform
+    float shift = 0.5 * u_Time;
+    float newX = fract(v_UV.x * count);
+    float newY = fract(fract(v_UV.y * count) + (floor(v_UV.x * count) + 1) * shift);
+    FragColor = texture(u_RGBTexture, vec2(newX, newY));
+}
+
+void Number()
+{
+    FragColor = texture(u_NumTexture, v_UV);
+}
+
 void main()
 {
     //Test();
@@ -92,5 +123,9 @@ void main()
     //Flag();
     // Flag2();
     // Q1();
-    Q2();
+    // Q2();
+    // Q3();
+    // Q4();
+    // Q5();
+    Number();
 }
