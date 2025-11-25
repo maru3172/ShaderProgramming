@@ -43,6 +43,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 		m_Points[index] = lTime; index++;
 	}
 
+	CreateFBOs();
+
 	// Load Texutres
 	m_RGBTexture = CreatePngTexture("./textures/rgb.png", GL_NEAREST);
 	m_0Texture = CreatePngTexture("./textures/0.png", GL_NEAREST);
@@ -80,6 +82,7 @@ void Renderer::CompileAllShaderPrograms()
 	m_GridMeshShader = CompileShaders("./Shaders/GridMesh.vs", "./Shaders/GridMesh.fs");
 	m_FullScreenShader = CompileShaders("./Shaders/FullScreenColor.vs", "./Shaders/FullScreenColor.fs");
 	m_FSShader = CompileShaders("./Shaders/FS.vs", "./Shaders/FS.fs");
+	m_TexShader = CompileShaders("./Shaders/Texture.vs", "./Shaders/Texture.fs");
 }
 
 bool Renderer::IsInitialized()
@@ -173,6 +176,20 @@ void Renderer::CreateVertexBufferObjects()
 	glGenBuffers(1, &m_FSVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_FSVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(fullRectFS), fullRectFS, GL_STATIC_DRAW);
+
+	float texRect[] =
+	{
+		-1, -1, 0, 0, 1,
+		1, -1, 0, 1, 1,
+		1, 1, 0, 1, 0,
+		-1 ,-1, 0, 0, 1,
+		-1, 1, 0, 0, 0,
+		1, 1, 0, 1, 0
+	};
+
+	glGenBuffers(1, &m_TexVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_TexVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texRect), texRect, GL_STATIC_DRAW);
 }
 
 void Renderer::CreateGridMesh(int x, int y)
@@ -282,6 +299,102 @@ GLuint Renderer::CreatePngTexture(char* filePath, GLuint samplingMethod)
 	return temp;
 }
 
+void Renderer::DrawTexture(float x, float y, float sx, float sy, GLuint texID)
+{
+	int shader = m_TexShader;
+	glUseProgram(shader);
+
+	int uTex = glGetUniformLocation(shader, "u_TexID");
+	glUniform1i(uTex, 0);
+	
+	int uTrans = glGetUniformLocation(shader, "u_Trans");
+	glUniform2f(uTrans, x, y);
+
+	int uScale = glGetUniformLocation(shader, "u_Scale");
+	glUniform2f(uScale, sx, sy);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texID);
+
+	int aPos = glGetAttribLocation(shader, "a_Pos");
+	int aTex = glGetAttribLocation(shader, "a_Tex");
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aTex);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_TexVBO);
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+	glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (GLvoid*)(sizeof(float)* 3));
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::CreateFBOs()
+{
+	// FBO0
+	// Color Gen : texture(render target)
+	glGenTextures(1, &m_RT0);
+	glBindTexture(GL_TEXTURE_2D, m_RT0);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Depth Gen
+	GLuint depthBuffer;
+	glGenRenderbuffers(1, &depthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 512, 512);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// FBO0 Gen
+	glGenFramebuffers(1, &m_FBO0);
+
+	// Attach
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_RT0, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+
+	// Check
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) assert(0);
+
+	// FBO1
+	// Color Gen : texture(render target)
+	glGenTextures(1, &m_RT1);
+	glBindTexture(GL_TEXTURE_2D, m_RT1);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Depth Gen
+	glGenRenderbuffers(1, &depthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 512, 512);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// FBO1 Gen
+	glGenFramebuffers(1, &m_FBO1);
+
+	// Attach
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO1);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_RT1, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+
+	// Check
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) assert(0);
+
+	// Restore frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void Renderer::DrawFullScreenColor(float r, float g, float b, float a)
 {
 	glEnable(GL_BLEND);
@@ -319,6 +432,10 @@ void Renderer::DrawFS()
 	int u_SamplerRGB = glGetUniformLocation(shader, "u_RGBTexture");
 	glUniform1i(u_SamplerRGB, 0);
 	int u_SamplerNum = glGetUniformLocation(shader, "u_NumTexture");
+	glUniform1i(u_SamplerNum, number);
+	int u_SamplerTotalNum = glGetUniformLocation(shader, "u_TotalNumTexture");
+	glUniform1i(u_SamplerNum, 11);
+	int u_SamplerNumber = glGetUniformLocation(shader, "u_Number");
 	glUniform1i(u_SamplerNum, number);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -361,6 +478,31 @@ void Renderer::DrawFS()
 	glDisableVertexAttribArray(attribPosition);
 	glDisableVertexAttribArray(attribTexPos);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::DrawDebugTextures()
+{
+	DrawTexture(-0.5, -0.5, 0.5, 0.5, m_RT0);
+	DrawTexture(0.5, -0.5, 0.5, 0.5, m_RT1);
+}
+
+void Renderer::DrawFBOs()
+{
+	//FBO0 render
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO0);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	DrawParticle();
+
+	//FBO1 render
+	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO1);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	DrawGridMesh();
+
+	// Restore
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
