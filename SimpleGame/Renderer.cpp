@@ -47,6 +47,7 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	// Load Texutres
 	m_RGBTexture = CreatePngTexture("./textures/rgb.png", GL_NEAREST);
+	m_ParticleTexture = CreatePngTexture("./textures/particle.png", GL_NEAREST);
 	m_0Texture = CreatePngTexture("./textures/0.png", GL_NEAREST);
 	m_1Texture = CreatePngTexture("./textures/1.png", GL_NEAREST);
 	m_2Texture = CreatePngTexture("./textures/2.png", GL_NEAREST);
@@ -299,27 +300,30 @@ GLuint Renderer::CreatePngTexture(char* filePath, GLuint samplingMethod)
 	return temp;
 }
 
-void Renderer::DrawTexture(float x, float y, float sx, float sy, GLuint texID)
+void Renderer::DrawTexture(float x, float y, float sx, float sy, GLuint texID, GLuint texID1, GLuint method)
 {
-	m_Time += 0.016;
+	// m_Time += 0.016;
 
 	int shader = m_TexShader;
 	glUseProgram(shader);
 
 	int uTex = glGetUniformLocation(shader, "u_TexID");
 	glUniform1i(uTex, 0);
-
+	int uTex1 = glGetUniformLocation(shader, "u_TexID1");
+	glUniform1i(uTex1, 1);
 	int uTimeLoc = glGetUniformLocation(shader, "u_Time");
 	glUniform1f(uTimeLoc, m_Time);
-	
 	int uTrans = glGetUniformLocation(shader, "u_Trans");
 	glUniform2f(uTrans, x, y);
-
 	int uScale = glGetUniformLocation(shader, "u_Scale");
 	glUniform2f(uScale, sx, sy);
+	int uMethod = glGetUniformLocation(shader, "u_Method");
+	glUniform1i(uMethod, method);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texID1);
 
 	int aPos = glGetAttribLocation(shader, "a_Pos");
 	int aTex = glGetAttribLocation(shader, "a_Tex");
@@ -416,6 +420,45 @@ void Renderer::CreateFBOs()
 	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) assert(0);
 
+	glGenFramebuffers(1, &m_HDRFBO0);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_HDRFBO0);
+	glGenTextures(1, &m_HDRRT0_0);
+	glBindTexture(GL_TEXTURE_2D, m_HDRRT0_0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 512, 512, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glGenTextures(1, &m_HDRRT0_1);
+	glBindTexture(GL_TEXTURE_2D, m_HDRRT0_1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 512, 512, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_HDRRT0_0, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_HDRRT0_1, 0);
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) assert(0);
+
+	glGenFramebuffers(2, m_PingpongFBO);
+	glGenTextures(2, m_PingpongTexture);
+	for (int i = 0; i < 2; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PingpongFBO[i]);
+		glBindTexture(GL_TEXTURE_2D, m_PingpongTexture[i]);
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGBA16F, 512, 512, 0, GL_RGBA, GL_FLOAT, NULL
+		);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_PingpongTexture[i], 0);
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) assert(0);
+	}
+
 	// Restore frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -511,10 +554,8 @@ void Renderer::DrawFS()
 
 void Renderer::DrawDebugTextures()
 {
-	DrawTexture(-0.5, -0.5, 0.5, 0.5, m_RT0);
-	DrawTexture(0.5, -0.5, 0.5, 0.5, m_RT0_1);
-	DrawTexture(0.5, 0.5, 0.5, 0.5, m_RT1_1);
-	DrawTexture(-0.5, 0.5, 0.5, 0.5, m_RT1);
+	/*DrawTexture(-0.5, -0.5, 0.5, 0.5, m_PingpongTexture[0], 0, 0);
+	DrawTexture(0.5, -0.5, 0.5, 0.5, m_PingpongTexture[1], 0, 0);*/
 }
 
 void Renderer::DrawFBOs()
@@ -532,6 +573,39 @@ void Renderer::DrawFBOs()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, 512, 512);
 	DrawGridMesh();
+
+	// Restore
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, 1024, 1024);
+}
+
+void Renderer::DrawBloomParticle()
+{
+	// render to HDRFBO0 (rt : HDRRT0_0, HDRRT0_1)
+	glBindFramebuffer(GL_FRAMEBUFFER, m_HDRFBO0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, 512, 512);
+	DrawParticle();
+
+	// 2. blur
+	glBindFramebuffer(GL_FRAMEBUFFER, m_PingpongFBO[0]); // render to m_PingpongTexture[0]
+	DrawTexture(0, 0, 1, 1, m_HDRRT0_1, 0, 1);
+
+	for (int i = 0; i < 20; ++i) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PingpongFBO[1]);
+		DrawTexture(0, 0, 1, 1, m_PingpongFBO[0], 0, 2);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PingpongFBO[0]);
+		DrawTexture(0, 0, 1, 1, m_PingpongFBO[1], 0, 1);
+	}
+
+	// Restore to main framebuffer
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, 1024, 1024);
+
+	// 3. Merge
+	DrawTexture(0, 0, 1, 1, m_HDRRT0_0, m_PingpongFBO[0], 3);
 
 	// Restore
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -722,7 +796,7 @@ void Renderer::DrawParticle()
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	// m_Time += 0.0016;
+	m_Time += 0.0016;
 
 	//Program select
 	GLuint shader = m_ParticleShader;
@@ -738,8 +812,13 @@ void Renderer::DrawParticle()
 	glUniform1f(uTimeLoc, m_Time);
 	int uForce = glGetUniformLocation(shader, "u_Force");
 	glUniform3f(uForce, 2, 0, 0);
+	int uTexLoc = glGetUniformLocation(shader, "u_Texture");
+	glUniform1i(uTexLoc, 0);
 
-	int stride = 15;
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_ParticleTexture);
+
+	int stride = 17;
 
 	int aPosLoc = glGetAttribLocation(shader, "a_Position");
 	int aValueLoc = glGetAttribLocation(shader, "a_Value");
@@ -749,6 +828,7 @@ void Renderer::DrawParticle()
 	int alifeTimeLoc = glGetAttribLocation(shader, "a_LifeTime");
 	int aMassLoc = glGetAttribLocation(shader, "a_Mass");
 	int aPeriodLoc = glGetAttribLocation(shader, "a_Period");
+	int aTexLoc = glGetAttribLocation(shader, "a_Tex");
 
 	glEnableVertexAttribArray(aPosLoc);
 	glEnableVertexAttribArray(aValueLoc);
@@ -758,6 +838,7 @@ void Renderer::DrawParticle()
 	glEnableVertexAttribArray(alifeTimeLoc);
 	glEnableVertexAttribArray(aMassLoc);
 	glEnableVertexAttribArray(aPeriodLoc);
+	glEnableVertexAttribArray(aTexLoc);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBOParticles);
 	glVertexAttribPointer(aPosLoc, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, 0);
@@ -768,6 +849,7 @@ void Renderer::DrawParticle()
 	glVertexAttribPointer(alifeTimeLoc, 1, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (GLvoid*)(sizeof(float) * 12));
 	glVertexAttribPointer(aMassLoc, 1, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (GLvoid*)(sizeof(float) * 13));
 	glVertexAttribPointer(aPeriodLoc, 1, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (GLvoid*)(sizeof(float) * 14));
+	glVertexAttribPointer(aTexLoc, 2, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (GLvoid*)(sizeof(float) * 15));
 
 	int vertexParticle = 10;
 
@@ -825,7 +907,7 @@ void Renderer::GetGLPosition(float x, float y, float *newX, float *newY)
 void Renderer::CreateParticles(int particleCounts)
 {
 	int verticesCounts = particleCounts * 6;
-	int floatCountsPerVertex = 3 + 1 + 4 + 1 + 3 + 1 + 1 + 1; // x, y, z, value, r, g, b, a, sTime, vx, vy, vz
+	int floatCountsPerVertex = 3 + 1 + 4 + 1 + 3 + 1 + 1 + 1 + 2; // x, y, z, value, r, g, b, a, sTime, vx, vy, vz, tx, ty
 	int totalFloatCounts = floatCountsPerVertex * verticesCounts;
 	int floatCountPerParticle = floatCountsPerVertex * 6;
 
@@ -868,6 +950,8 @@ void Renderer::CreateParticles(int particleCounts)
 		temp[index] = lifeTime; index++; // lifeTime
 		temp[index] = mass; index++; // mass
 		temp[index] = period; index++; // period
+		temp[index] = 0; index++; // tx
+		temp[index] = 1; index++; // ty
 
 		temp[index] = centerX + size; index++;
 		temp[index] = centerY + size; index++;
@@ -885,6 +969,8 @@ void Renderer::CreateParticles(int particleCounts)
 		temp[index] = lifeTime; index++; // lifeTime
 		temp[index] = mass; index++; // mass
 		temp[index] = period; index++; // period
+		temp[index] = 1; index++; // tx
+		temp[index] = 9; index++; // ty
 
 		temp[index] = centerX - size; index++;
 		temp[index] = centerY + size; index++;
@@ -902,6 +988,8 @@ void Renderer::CreateParticles(int particleCounts)
 		temp[index] = lifeTime; index++; // lifeTime
 		temp[index] = mass; index++; // mass
 		temp[index] = period; index++; // period
+		temp[index] = 0; index++; // tx
+		temp[index] = 0; index++; // ty
 
 		temp[index] = centerX - size; index++;
 		temp[index] = centerY - size; index++;
@@ -919,6 +1007,8 @@ void Renderer::CreateParticles(int particleCounts)
 		temp[index] = lifeTime; index++; // lifeTime
 		temp[index] = mass; index++; // mass
 		temp[index] = period; index++; // period
+		temp[index] = 0; index++; // tx
+		temp[index] = 1; index++; // ty
 
 		temp[index] = centerX + size; index++;
 		temp[index] = centerY - size; index++;
@@ -936,6 +1026,8 @@ void Renderer::CreateParticles(int particleCounts)
 		temp[index] = lifeTime; index++; // lifeTime
 		temp[index] = mass; index++; // mass
 		temp[index] = period; index++; // period
+		temp[index] = 1; index++; // tx
+		temp[index] = 1; index++; // ty
 
 		temp[index] = centerX + size; index++;
 		temp[index] = centerY + size; index++;
@@ -953,6 +1045,8 @@ void Renderer::CreateParticles(int particleCounts)
 		temp[index] = lifeTime; index++; // lifeTime
 		temp[index] = mass; index++; // mass
 		temp[index] = period; index++; // period
+		temp[index] = 1; index++; // tx
+		temp[index] = 0; index++; // ty
 	}
 
 	glGenBuffers(1, &m_VBOParticles);

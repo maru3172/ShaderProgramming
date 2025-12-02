@@ -8,8 +8,10 @@ in vec3 a_Vel;
 in float a_LifeTime;
 in float a_Mass;
 in float a_Period;
+in vec2 a_Tex;
 
 out vec4 v_Color;
+out vec2 v_Tex;
 
 uniform float u_Time;
 uniform vec3 u_Force;
@@ -80,6 +82,7 @@ void sinParticle()
 void circleParticle()
 {
 	vec4 newPosition = vec4(a_Position, 1);
+	newPosition.xy *= 3;
 	float newAlpha = 1;
 	float lifeTime = a_LifeTime;
 	float newTime = u_Time - a_STime;
@@ -103,7 +106,7 @@ void circleParticle()
 	}
 
 	gl_Position = newPosition;
-	v_Color = vec4(a_Color.rgb, newAlpha);
+	v_Color = vec4(a_Color.rgb * 3 * newAlpha, newAlpha);
 }
 
 // 중간고사
@@ -157,4 +160,6 @@ void main()
 	// Q1();
 	// Q2();
 	// Q3();
+
+	v_Tex = a_Tex;
 }
