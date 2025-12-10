@@ -19,6 +19,18 @@ uniform vec3 u_Force;
 const float c_PI = 3.141592;
 const vec2 c_G = vec2(0, -9.8);
 
+const vec3 c_StartPos = vec3(-1, 0, 0);
+const vec3 c_Velocity = vec3(2.0, 0, 0);
+
+void line()
+{
+	float newTime = abs(fract(u_Time / a_Period) - 0.5) * 2.0;
+	vec4 newPosition;
+	newPosition.xyz = (c_StartPos + a_Position) + c_Velocity * newTime;
+	newPosition.w = 1;
+	gl_Position = newPosition;
+}
+
 void fountain()
 {
 	float lifeTime = a_LifeTime;

@@ -71,6 +71,12 @@ vec4 applyEffects(sampler2D tex, vec2 uv)
     return vec4(color, base.a);
 }
 
+vec3 saturateVec(vec3 c, float s)
+{
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    return mix(vec3(l), c, s);
+}
+
 void Pixelized()
 {
     vec2 newUV = v_Tex;
@@ -81,44 +87,45 @@ void Pixelized()
 }
 
 vec4 BlurH()
-{             
+{
     vec2 tex_offset = 1.0 / textureSize(u_TexID, 0); // gets size of single texel
     vec3 result = texture(u_TexID, v_Tex).rgb * weight[0]; // current fragment's contribution
 
     for(int i = 1; i < 5; ++i)
     {
         result += texture(u_TexID, v_Tex + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
-        result += texture(u_TexID, v_Tex - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        result += texture(u_TexID1, v_Tex - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
     }
 
-   return vec4(result, 1.0);
+    return vec4(result, 1.0);
+
 }
 
 vec4 BlurV()
-{             
+{
     vec2 tex_offset = 1.0 / textureSize(u_TexID, 0); // gets size of single texel
-    vec3 result = texture(u_TexID, v_Tex).rgb * weight[0]; // current fragment's contribution
+    vec3 result = texture(u_TexID1, v_Tex).rgb * weight[0]; // current fragment's contribution
 
     for(int i = 1; i < 5; ++i)
     {
         result += texture(u_TexID, v_Tex + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
-        result += texture(u_TexID, v_Tex - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        result += texture(u_TexID1, v_Tex - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
     }
 
-   return vec4(result, 1.0);
+    return vec4(result, 1.0);
 }
 
 vec4 Merge()
-{             
+{
     const float gamma = 2.2;
-    vec3 hdrColor = texture(u_TexID, vec2(v_Tex.x, 1 - v_Tex.y)).rgb;      
+    vec3 hdrColor = texture(u_TexID, v_Tex).rgb;      
     vec3 bloomColor = texture(u_TexID1, v_Tex).rgb;
     hdrColor += bloomColor; 
 
     // tone mapping
-    vec3 result = vec3(1.0) - exp(-hdrColor * 2.2);
+    vec3 result = vec3(1.0) - exp(-hdrColor * 1.0);
 
-    // also gamma correct while we're at it
+    // also gamma correct while we're at it       
     result = pow(result, vec3(1.0 / gamma));
     return vec4(result, 1.0);
 }
@@ -128,6 +135,7 @@ void main()
     // FragColor = applyEffects(u_TexID, v_Tex);
     // FragColor = vec4(v_Tex, 0, 1);
     // Pixelized();
+
 
     FragColor = vec4(0);
     if(u_Method == 0) FragColor = texture(u_TexID, vec2(v_Tex.x, 1 - v_Tex.y));

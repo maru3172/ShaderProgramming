@@ -377,6 +377,9 @@ void Renderer::CreateFBOs()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_RT0_1, 0);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
 
+	GLenum buffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, buffers);
+
 	// Check
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) assert(0);
@@ -584,12 +587,15 @@ void Renderer::DrawBloomParticle()
 {
 	// render to HDRFBO0 (rt : HDRRT0_0, HDRRT0_1)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_HDRFBO0);
+	GLenum drawbuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, drawbuffers);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, 512, 512);
 	DrawParticle();
 
 	// 2. blur
 	glBindFramebuffer(GL_FRAMEBUFFER, m_PingpongFBO[0]); // render to m_PingpongTexture[0]
+	glViewport(0, 0, 512, 512);
 	DrawTexture(0, 0, 1, 1, m_HDRRT0_1, 0, 1);
 
 	for (int i = 0; i < 20; ++i) {
@@ -599,12 +605,9 @@ void Renderer::DrawBloomParticle()
 		DrawTexture(0, 0, 1, 1, m_PingpongFBO[1], 0, 1);
 	}
 
-	// Restore to main framebuffer
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	// 3. Merge
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, 1024, 1024);
-
-	// 3. Merge
 	DrawTexture(0, 0, 1, 1, m_HDRRT0_0, m_PingpongFBO[0], 3);
 
 	// Restore
